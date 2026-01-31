@@ -5,71 +5,25 @@ import os
 
 
 # ========= CONFIG =========
-# Update this path if your database file has a different name/location.
 ACCESS_DB_PATH = r"studenst.accdb"
-
-
-def find_access_driver():
-    """Find available Microsoft Access ODBC driver."""
-    drivers = [d for d in pyodbc.drivers() if 'access' in d.lower() or 'mdb' in d.lower()]
-    
-    # Common driver names to try (in order of preference)
-    preferred_drivers = [
-        "Microsoft Access Driver (*.mdb, *.accdb)",
-        "Microsoft Access Driver (*.mdb)",
-        "Driver do Microsoft Access (*.mdb)",  # Non-English systems
-    ]
-    
-    # Check if any preferred driver is available
-    for driver in preferred_drivers:
-        if driver in drivers:
-            return driver
-    
-    # If no preferred driver found, return first available Access driver
-    if drivers:
-        return drivers[0]
-    
-    return None
+ACCESS_DRIVER = "Microsoft Access Driver (*.mdb, *.accdb)"
 
 
 def get_connection():
-    """
-    Open a connection to the Access database using the ACE OLEDB provider.
-
-    Requirements:
-    - Microsoft Access Database Engine (ACE) 32/64-bit matching your Python.
-    - `pyodbc` installed: pip install pyodbc
-    """
-    driver = find_access_driver()
-    
-    if not driver:
-        print("\nERROR: Microsoft Access ODBC Driver not found!")
-        print("\nPlease install Microsoft Access Database Engine:")
-        print("Download from: https://www.microsoft.com/en-us/download/details.aspx?id=54920")
-        print("\nIMPORTANT: Install the version (32-bit or 64-bit) that matches your Python installation.")
-        print("To check your Python version, run: python -c \"import platform; print(platform.architecture()[0])\"")
-        sys.exit(1)
-    
-    # Convert relative path to absolute path
+    """Open a connection to the Access database."""
     db_path = os.path.abspath(ACCESS_DB_PATH)
-    
+
     if not os.path.exists(db_path):
         print(f"\nWARNING: Database file not found at: {db_path}")
         print("Creating new database file...")
-    
-    conn_str = (
-        rf"Driver={{{driver}}};"
-        rf"Dbq={db_path};"
-        r"Uid=Admin;"
-        r"Pwd=;"
-    )
-    
+
+    conn_str = f"Driver={{{ACCESS_DRIVER}}};Dbq={db_path};Uid=Admin;Pwd=;"
+
     try:
         return pyodbc.connect(conn_str)
     except pyodbc.Error as e:
         print(f"\nERROR connecting to database: {e}")
-        print(f"Driver used: {driver}")
-        print(f"Database path: {db_path}")
+        print(f"Driver: {ACCESS_DRIVER} | Path: {db_path}")
         raise
 
 
@@ -124,7 +78,9 @@ def init_db():
 # ========= AUTH =========
 def register():
     username = input("Enter new username: ").strip()
-    password = getpass.getpass("Enter new password: ").strip()
+    # password = getpass.getpass("Enter new password: ").strip()
+    password = input("Enter new password: ").strip()    
+
     if not username or not password:
         print("Username and password cannot be empty.")
         return
@@ -146,7 +102,8 @@ def register():
 
 def login():
     username = input("Username: ").strip()
-    password = getpass.getpass("Password: ").strip()
+    # password = getpass.getpass("Password: ").strip()
+    password = input("Password: ").strip()
 
     try:
         with get_connection() as conn:
@@ -160,7 +117,7 @@ def login():
                 print(f"Welcome, {username}!")
                 return True
             else:
-                print("Invalid username or password.")
+                print("  lid username or password.")
                 return False
     except Exception as e:
         print(f"Error during login: {e}")
